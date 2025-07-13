@@ -155,6 +155,9 @@ exec "$TCL_SERVER" --runtime tcl --privileged "$@"
         ("tcl-mcp-server-admin-molt", molt_admin_wrapper_content), // Molt runtime, privileged
     ];
     
+    // Ensure target directory exists
+    fs::create_dir_all(target_dir).expect("Failed to create target directory");
+    
     for (script_name, content) in scripts {
         let script_path = Path::new(target_dir).join(script_name);
         fs::write(&script_path, content).expect(&format!("Failed to write {} script", script_name));

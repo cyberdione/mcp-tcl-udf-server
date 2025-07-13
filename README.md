@@ -7,11 +7,9 @@ A Model Context Protocol (MCP) server that provides TCL (Tool Command Language) 
 <!-- GitHub repository badges -->
 [![GitHub Release](https://img.shields.io/github/v/release/cyberdione/mcp-tcl-udf-server.svg)](https://github.com/cyberdione/mcp-tcl-udf-server/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/cyberdione/mcp-tcl-udf-server.svg)](https://github.com/cyberdione/mcp-tcl-udf-server/issues)
-[![License](https://img.shields.io/github/license/cyberdione/mcp-tcl-udf-server.svg)](https://github.com/cyberdione/mcp-tcl-udf-server/blob/main/LICENSE)
 
 <!-- Crates.io crate badges -->
 [![crates.io](https://img.shields.io/crates/v/tcl-mcp-server.svg)](https://crates.io/crates/tcl-mcp-server)
-[![Downloads](https://img.shields.io/crates/d/tcl-mcp-server.svg)](https://crates.io/crates/tcl-mcp-server)
 [![Documentation](https://docs.rs/tcl-mcp-server/badge.svg)](https://docs.rs/tcl-mcp-server)
 
 ## TCL Runtime Support
