@@ -5,6 +5,8 @@ description = "A Model Context Protocol (MCP) server that provides TCL (Tool Com
 license = "BSD-3-Clause"
 edition = "2021"
 build = "build.rs"
+readme = "README.md"
+repository = "https://crates.io/crates/tcl-mcp-server"
 
 [features]
 default = ["molt"]
