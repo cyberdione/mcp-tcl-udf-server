@@ -1,6 +1,7 @@
 // Expose modules for testing
 pub mod advanced_tools;
 pub mod capabilities;
+pub mod hooks;
 pub mod mcp_client;
 pub mod mcp_persistence;
 pub mod namespace;
