@@ -7,6 +7,7 @@ pub mod config;
 pub mod context;
 pub mod errors;
 pub mod handler;
+pub mod handlers;
 pub mod lifecycle;
 pub mod manager;
 pub mod platform;
@@ -24,6 +25,11 @@ pub use self::config::{
 pub use self::context::{HookContext, HookContextBuilder};
 pub use self::errors::{HookError, HookResult};
 pub use self::handler::{HookHandler, AsyncHookHandler};
+pub use self::handlers::{
+    TclScriptHandler, ExternalCommandHandler,
+    LoggingHandler, MetricsHandler, ValidationHandler,
+    TransformHandler, NotificationHandler,
+};
 pub use self::lifecycle::{HookLifecycle, HookPhase};
 pub use self::manager::HookManager;
 pub use self::platform::PlatformDirs;

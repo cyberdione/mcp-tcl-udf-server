@@ -68,12 +68,17 @@ notify = "6.0"
 
 # Hooks system dependencies (toml already included above)
 async-trait = "0.1"
+regex = "1.10"
+base64 = "0.22"
+jsonschema = "0.17"
 
 [dev-dependencies]
 # For testing with temporary directories
 tempfile = "3.0"
 # For examples
 env_logger = "0.10"
+# For testing logging
+tracing-test = "0.2"
 
 [lib]
 name = "tcl_mcp_server"

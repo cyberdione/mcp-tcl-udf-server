@@ -511,4 +511,226 @@ mod tests {
         
         assert_eq!(result, json!({"stopped": "by_low"}));
     }
+    
+    #[tokio::test]
+    async fn test_handler_enable_disable() {
+        let manager = HookManager::new();
+        
+        let handler = TestHandler {
+            name: "test".to_string(),
+            result: ExecutionResult::Replace(json!({"executed": true})),
+        };
+        
+        manager
+            .register(
+                "test",
+                vec![HookType::RequestProcessed],
+                handler,
+                HookPriority::NORMAL,
+            )
+            .unwrap();
+        
+        // Handler is enabled by default
+        let context = HookContext::new();
+        let result = manager
+            .execute(HookType::RequestProcessed, &context, json!({}))
+            .await
+            .unwrap();
+        assert_eq!(result, json!({"executed": true}));
+        
+        // Disable handler
+        manager.set_handler_enabled("test", false).unwrap();
+        
+        // Should not execute
+        let result = manager
+            .execute(HookType::RequestProcessed, &context, json!({"original": true}))
+            .await
+            .unwrap();
+        assert_eq!(result, json!({"original": true}));
+        
+        // Re-enable handler
+        manager.set_handler_enabled("test", true).unwrap();
+        
+        // Should execute again
+        let result = manager
+            .execute(HookType::RequestProcessed, &context, json!({}))
+            .await
+            .unwrap();
+        assert_eq!(result, json!({"executed": true}));
+    }
+    
+    #[tokio::test]
+    async fn test_handler_unregister() {
+        let manager = HookManager::new();
+        
+        let handler = TestHandler {
+            name: "test".to_string(),
+            result: ExecutionResult::Continue,
+        };
+        
+        manager
+            .register(
+                "test",
+                vec![HookType::ServerShutdown],
+                handler,
+                HookPriority::NORMAL,
+            )
+            .unwrap();
+        
+        assert_eq!(manager.list_handlers().len(), 1);
+        
+        // Unregister handler
+        manager.unregister("test").unwrap();
+        
+        assert_eq!(manager.list_handlers().len(), 0);
+        
+        // Should error on duplicate unregister
+        assert!(manager.unregister("test").is_err());
+    }
+    
+    #[tokio::test]
+    async fn test_multiple_handlers_same_hook() {
+        let manager = HookManager::new();
+        
+        let handler1 = TestHandler {
+            name: "handler1".to_string(),
+            result: ExecutionResult::Replace(json!({"step": 1})),
+        };
+        
+        let handler2 = TestHandler {
+            name: "handler2".to_string(),
+            result: ExecutionResult::Replace(json!({"step": 2})),
+        };
+        
+        manager
+            .register(
+                "handler1",
+                vec![HookType::TclPreExecution],
+                handler1,
+                HookPriority(100),
+            )
+            .unwrap();
+        
+        manager
+            .register(
+                "handler2",
+                vec![HookType::TclPreExecution],
+                handler2,
+                HookPriority(200),
+            )
+            .unwrap();
+        
+        let context = HookContext::new();
+        let result = manager
+            .execute(HookType::TclPreExecution, &context, json!({"original": true}))
+            .await
+            .unwrap();
+        
+        // Second handler should win as it executes after first
+        assert_eq!(result, json!({"step": 2}));
+    }
+    
+    #[tokio::test]
+    async fn test_handler_error_propagation() {
+        struct ErrorHandler;
+        
+        #[async_trait]
+        impl AsyncHookHandler for ErrorHandler {
+            async fn execute(&self, _context: &HookContext, _payload: &HookPayload) -> HookResult<ExecutionResult> {
+                Err(HookError::execution_failed("error_handler", "Test error"))
+            }
+            
+            fn name(&self) -> &str {
+                "error_handler"
+            }
+        }
+        
+        let manager = HookManager::new();
+        manager
+            .register(
+                "error",
+                vec![HookType::TclError],
+                ErrorHandler,
+                HookPriority::NORMAL,
+            )
+            .unwrap();
+        
+        let context = HookContext::new();
+        let result = manager
+            .execute(HookType::TclError, &context, json!({}))
+            .await;
+        
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Test error"));
+    }
+    
+    #[tokio::test]
+    async fn test_handler_stats() {
+        let manager = HookManager::new();
+        
+        let handler = TestHandler {
+            name: "stats_test".to_string(),
+            result: ExecutionResult::Continue,
+        };
+        
+        manager
+            .register(
+                "stats_test",
+                vec![HookType::RequestReceived],
+                handler,
+                HookPriority::NORMAL,
+            )
+            .unwrap();
+        
+        let context = HookContext::new();
+        
+        // Execute handler multiple times
+        for _ in 0..3 {
+            let _ = manager
+                .execute(HookType::RequestReceived, &context, json!({}))
+                .await;
+        }
+        
+        // Check stats
+        let stats = manager.get_stats("stats_test").unwrap();
+        assert_eq!(stats.total_executions, 3);
+        assert_eq!(stats.successful_executions, 3);
+        assert_eq!(stats.failed_executions, 0);
+        assert!(stats.average_duration.is_some());
+    }
+    
+    #[tokio::test]
+    async fn test_execution_history() {
+        let manager = HookManager::new();
+        
+        let handler = TestHandler {
+            name: "history_test".to_string(),
+            result: ExecutionResult::Continue,
+        };
+        
+        manager
+            .register(
+                "history_test",
+                vec![HookType::ServerInitialized],
+                handler,
+                HookPriority::NORMAL,
+            )
+            .unwrap();
+        
+        let context = HookContext::new();
+        
+        // Execute handler
+        let _ = manager
+            .execute(HookType::ServerInitialized, &context, json!({}))
+            .await;
+        
+        // Wait a bit for history to be recorded
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        
+        // Check history
+        let history = manager.get_history(Some(10)).await;
+        assert!(!history.is_empty());
+        assert_eq!(history[0].0, "history_test");
+        assert_eq!(history[0].2, "success");
+    }
 }

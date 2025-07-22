@@ -98,8 +98,25 @@ impl HookType {
 impl fmt::Display for HookType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::ServerStartup => write!(f, "server_startup"),
+            Self::ServerShutdown => write!(f, "server_shutdown"),
+            Self::ServerInitialized => write!(f, "server_initialized"),
+            Self::RequestReceived => write!(f, "request_received"),
+            Self::RequestProcessed => write!(f, "request_processed"),
+            Self::ResponseSent => write!(f, "response_sent"),
+            Self::ToolPreExecution => write!(f, "tool_pre_execution"),
+            Self::ToolPostExecution => write!(f, "tool_post_execution"),
+            Self::ToolRegistered => write!(f, "tool_registered"),
+            Self::ToolRemoved => write!(f, "tool_removed"),
+            Self::TclPreExecution => write!(f, "tcl_pre_execution"),
+            Self::TclPostExecution => write!(f, "tcl_post_execution"),
+            Self::TclError => write!(f, "tcl_error"),
+            Self::McpServerConnected => write!(f, "mcp_server_connected"),
+            Self::McpServerDisconnected => write!(f, "mcp_server_disconnected"),
+            Self::McpServerError => write!(f, "mcp_server_error"),
+            Self::SecurityCheck => write!(f, "security_check"),
+            Self::AccessDenied => write!(f, "access_denied"),
             Self::Custom(name) => write!(f, "custom:{}", name),
-            _ => write!(f, "{:?}", self),
         }
     }
 }
@@ -334,7 +351,7 @@ mod tests {
     
     #[test]
     fn test_hook_type_display() {
-        assert_eq!(HookType::ServerStartup.to_string(), "ServerStartup");
+        assert_eq!(HookType::ServerStartup.to_string(), "server_startup");
         assert_eq!(HookType::Custom("test".to_string()).to_string(), "custom:test");
     }
     
