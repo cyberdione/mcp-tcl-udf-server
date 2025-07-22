@@ -77,6 +77,7 @@ pub struct HookManager {
 
 /// Execution history entry
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Fields used for logging/debugging
 struct ExecutionHistory {
     timestamp: Instant,
     hook_type: HookType,
@@ -185,8 +186,6 @@ impl HookManager {
             return Ok(data);
         }
         
-        let payload = HookPayload::new(hook_type.clone(), data.clone());
-        
         // Get handlers for this hook type
         let handler_names = self
             .handlers
@@ -196,6 +195,8 @@ impl HookManager {
         
         // Execute handlers in order
         for handler_name in handler_names {
+            // Create payload with current data state
+            let payload = HookPayload::new(hook_type.clone(), data.clone());
             let mut entry = match self.entries.get_mut(&handler_name) {
                 Some(entry) => entry,
                 None => continue,
@@ -397,7 +398,7 @@ impl Default for HookManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hooks::{HookHandler, AsyncHookHandler};
+    use crate::hooks::AsyncHookHandler;
     use async_trait::async_trait;
     use serde_json::json;
     

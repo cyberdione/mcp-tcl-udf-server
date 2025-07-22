@@ -353,6 +353,42 @@ tcl-mcp-server mcp remove my-server
                     └─────────────┘
 ```
 
+## Hooks System (New!)
+
+The TCL MCP Server includes a powerful hooks system for extending functionality:
+
+### Key Features
+- **Async-First**: Non-blocking hook execution
+- **Multiple Handler Types**: Built-in, TCL scripts, external commands
+- **Chain Processing**: Transform data through multiple handlers
+- **Priority Control**: Fine-grained execution ordering
+- **Runtime Management**: Add/remove hooks without restart
+
+### Quick Example
+```rust
+// Add request logging
+let hook_manager = HookManager::new();
+hook_manager.register(
+    "logger",
+    vec![HookType::RequestReceived],
+    LoggingHandler::new("logger", config),
+    HookPriority::NORMAL,
+)?;
+```
+
+### Available Hook Points
+- Server lifecycle (startup, shutdown, initialized)
+- Request processing (received, processed, sent)
+- Tool execution (pre/post execution, registration)
+- TCL execution (pre/post, errors)
+- Security events (checks, access denied)
+
+### Documentation
+- [Hooks Overview](docs/HOOKS.md) - Complete guide
+- [Quick Start](docs/HOOKS_QUICKSTART.md) - Get started in minutes
+- [API Reference](docs/HOOKS_API.md) - Detailed API documentation
+- [Examples](examples/hooks/) - Working examples
+
 ## Advanced Usage
 
 ### Creating Custom Tools

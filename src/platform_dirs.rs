@@ -98,15 +98,43 @@ mod tests {
         let cache = cache_dir().unwrap();
 
         if cfg!(target_os = "linux") {
-            // Should follow XDG spec
-            let home = std::env::var("HOME").unwrap();
-            assert!(
-                data.starts_with(home.as_str()) || data.to_string_lossy().contains(".local/share")
-            );
-            assert!(
-                config.starts_with(home.as_str()) || config.to_string_lossy().contains(".config")
-            );
-            assert!(cache.starts_with(home.as_str()) || cache.to_string_lossy().contains(".cache"));
+            // Should follow XDG Base Directory Specification
+            let data_str = data.to_string_lossy();
+            let config_str = config.to_string_lossy();
+            let cache_str = cache.to_string_lossy();
+            
+            // Check XDG_DATA_HOME or default $HOME/.local/share
+            let xdg_data_home = std::env::var("XDG_DATA_HOME").ok();
+            if let Some(xdg_data) = xdg_data_home {
+                assert!(data_str.starts_with(&xdg_data), 
+                    "Data directory should start with XDG_DATA_HOME: {} but got: {}", xdg_data, data_str);
+            } else if let Ok(home) = std::env::var("HOME") {
+                let expected = format!("{}/.local/share", home);
+                assert!(data_str.starts_with(&expected), 
+                    "Data directory should start with $HOME/.local/share: {} but got: {}", expected, data_str);
+            }
+            
+            // Check XDG_CONFIG_HOME or default $HOME/.config  
+            let xdg_config_home = std::env::var("XDG_CONFIG_HOME").ok();
+            if let Some(xdg_config) = xdg_config_home {
+                assert!(config_str.starts_with(&xdg_config),
+                    "Config directory should start with XDG_CONFIG_HOME: {} but got: {}", xdg_config, config_str);
+            } else if let Ok(home) = std::env::var("HOME") {
+                let expected = format!("{}/.config", home);
+                assert!(config_str.starts_with(&expected),
+                    "Config directory should start with $HOME/.config: {} but got: {}", expected, config_str);
+            }
+            
+            // Check XDG_CACHE_HOME or default $HOME/.cache
+            let xdg_cache_home = std::env::var("XDG_CACHE_HOME").ok();
+            if let Some(xdg_cache) = xdg_cache_home {
+                assert!(cache_str.starts_with(&xdg_cache),
+                    "Cache directory should start with XDG_CACHE_HOME: {} but got: {}", xdg_cache, cache_str);
+            } else if let Ok(home) = std::env::var("HOME") {
+                let expected = format!("{}/.cache", home);
+                assert!(cache_str.starts_with(&expected),
+                    "Cache directory should start with $HOME/.cache: {} but got: {}", expected, cache_str);
+            }
         } else if cfg!(target_os = "macos") {
             // Should use Library directories
             assert!(data
